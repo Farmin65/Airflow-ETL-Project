@@ -1,11 +1,55 @@
 # ETL-пайплайн на Apache Airflow
 
-![Airflow](https://img.shields.io/badge/Apache%20Airflow-3.0+-017CEE?style=flat&logo=apache-airflow&logoColor=white)
-![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=flat&logo=python&logoColor=white)
-![SQLite](https://img.shields.io/badge/SQLite-3-003B57?style=flat&logo=sqlite&logoColor=white)
-![Pandas](https://img.shields.io/badge/Pandas-2.1-150458?style=flat&logo=pandas&logoColor=white)
+![Airflow](https://img.shields.io/badge/Apache%20Airflow-017CEE?style=flat&logo=apache-airflow&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-003B57?style=flat&logo=sqlite&logoColor=white)
+![Pandas](https://img.shields.io/badge/Pandas-150458?style=flat&logo=pandas&logoColor=white)
 
-Учебный ETL-пайплайн для демонстрации навыков оркестрации данных. Пайплайн ежедневно забирает сырые данные о продажах, очищает их, обогащает вычисляемыми полями и загружает в SQLite.
+## О проекте
+
+Проект представляет собой учебный ETL-пайплайн, построенный на Apache Airflow. Основная цель — автоматизировать ежедневную обработку данных о продажах интернет-магазина и подготовить их для аналитической отчётности.
+
+### Что делается с данными
+
+Пайплайн выполняет полный цикл обработки:
+
+1. **Извлечение (Extract)** — чтение сырого CSV-файла с данными о заказах. Если файл отсутствует, система автоматически генерирует тестовый набор данных для демонстрации работы.
+
+2. **Трансформация (Transform)** — очистка и подготовка данных:
+   - Приведение колонки `price` к числовому типу с удалением лишних символов
+   - Парсинг дат с обработкой некорректных значений и заполнение пропусков текущей датой
+   - Расчёт вычисляемого поля `total_amount` (цена × количество)
+   - Фильтрация записей с отрицательным или нулевым количеством товара
+
+3. **Загрузка (Load)** — сохранение очищенных данных в базу SQLite для последующего анализа.
+
+4. **Проверка (Verify)** — контрольная задача, выводящая количество загруженных записей.
+
+### Состав исходных данных
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `order_id` | int | Уникальный идентификатор заказа |
+| `product` | str | Наименование товара |
+| `price` | float | Цена за единицу товара |
+| `quantity` | int | Количество единиц в заказе |
+| `order_date` | date | Дата оформления заказа |
+
+### Выходные данные
+
+После обработки в таблице `cleaned_sales` появляются все исходные поля плюс вычисляемое поле `total_amount`, готовое для построения отчётов по выручке.
+
+### Особенности реализации
+
+- Код разделён на независимые модули (`extract`, `transform`, `load`) для удобства тестирования и поддержки
+- DAG спроектирован с учётом зависимостей: каждая следующая задача выполняется только после успешного завершения предыдущей
+- Настроен автоматический перезапуск задач при сбоях (1 повтор через 5 минут)
+
+## Выполнение пайплайна
+
+![Успешный запуск DAG в Airflow](images/airflow_dag_success.png)
+
+*Все 5 задач выполненены успешно.*
 
 ---
 
@@ -42,7 +86,7 @@ airflow_etl_project/
 
 ---
 
-## 📊 Схема DAG
+## Схема DAG
 
 ```
 prepare_environment → extract_from_source → transform_and_cleanse → load_to_sqlite → check_row_count
@@ -50,7 +94,7 @@ prepare_environment → extract_from_source → transform_and_cleanse → load_t
 
 ---
 
-## 🛠️ Установка и запуск
+## Установка и запуск
 
 ### 1. Создание виртуального окружения
 
@@ -89,7 +133,7 @@ mkdir -p ~/airflow/data/raw ~/airflow/data/staging ~/airflow/db
 
 ### 6. Правка путей в скриптах
 
-Убедись, что в `transform.py` и `load.py` указаны корректные пути до `~/airflow/data/` и `~/airflow/db/`.
+Убедитесь, что в `transform.py` и `load.py` указаны корректные пути до `~/airflow/data/` и `~/airflow/db/`.
 
 ### 7. Запуск Airflow
 
@@ -107,7 +151,7 @@ airflow scheduler
 
 ### 8. Доступ к веб-интерфейсу
 
-Открой браузер и перейди по адресу:
+Перейти по адресу:
 ```
 http://localhost:8080
 ```
@@ -116,13 +160,13 @@ http://localhost:8080
 
 ---
 
-## ▶️ Запуск DAG
+## Запуск DAG
 
 В интерфейсе Airflow найди DAG `student_sales_etl_pipeline`, нажми на Play и выбери **Trigger DAG**.
 
 ---
 
-## ✅ Проверка результата
+## Проверка результата
 
 ```bash
 sqlite3 ~/airflow/db/sales.db "SELECT * FROM cleaned_sales LIMIT 5;"
@@ -130,17 +174,3 @@ sqlite3 ~/airflow/db/sales.db "SELECT * FROM cleaned_sales LIMIT 5;"
 
 ---
 
-## 📝 Примечания
-
-- В Airflow 3.0+ команда `airflow webserver` заменена на `airflow api-server`
-- Параметр `schedule_interval` переименован в `schedule`
-- Для работы `BashOperator` с `sqlite3` необходимо установить пакет:
-  ```bash
-  sudo apt install sqlite3 -y
-  ```
-
----
-
-## 👤 Автор
-
-Evgeniy — учебный проект по оркестрации ETL-процессов.
