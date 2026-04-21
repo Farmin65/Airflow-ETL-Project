@@ -47,7 +47,7 @@
 
 ## Выполнение пайплайна
 
-![Успешный запуск DAG в Airflow](images/airflow_dag_success.png)
+![Успешный запуск DAG в Airflow](airflow_dag_success.jpg)
 
 *Все 5 задач выполненены успешно.*
 
