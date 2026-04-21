@@ -162,7 +162,7 @@ http://localhost:8080
 
 ## Запуск DAG
 
-В интерфейсе Airflow найди DAG `student_sales_etl_pipeline`, нажми на Play и выбери **Trigger DAG**.
+В интерфейсе Airflow найдите DAG `student_sales_etl_pipeline`, нажмите на Play и выберите **Trigger DAG**.
 
 ---
 
